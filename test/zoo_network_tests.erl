@@ -1,5 +1,5 @@
--include_lib("eunit/include/eunit.hrl").
 -module(zoo_network_tests).
+-include_lib("eunit/include/eunit.hrl").
 
 random_network_test() ->
     Network = zoo_network:new(2, 3, 5),
