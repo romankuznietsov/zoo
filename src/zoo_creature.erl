@@ -6,8 +6,8 @@
 -define(BRAIN_INPUTS, 3).
 -define(BRAIN_OUTPUTS, 2).
 -define(BRAIN_SIZE, 7).
--define(TURN_SPEED, 0.01).
--define(MOVE_SPEED, 0.1).
+-define(TURN_SPEED, 0.1).
+-define(MOVE_SPEED, 1).
 
 -record(zoo_creature, {
           id :: reference(),

@@ -28,8 +28,18 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+    ChildSpecs = [zoo_world_srv_childspec()],
+    {ok, { {one_for_all, 0, 1}, ChildSpecs} }.
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+zoo_world_srv_childspec() ->
+    #{id => zoo_world_srv,
+      start => {zoo_world_srv, start_link, []},
+      restart => temporary,
+      shutdown => 10,
+      type => worker,
+      modules => [zoo_world_srv]
+     }.
