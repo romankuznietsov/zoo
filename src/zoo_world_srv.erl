@@ -1,7 +1,7 @@
 -module(zoo_world_srv).
 -behaviour(gen_server).
 
--export([start_link/0, tick/0, get_as_json/0]).
+-export([start_link/0, update/0, get_as_json/0]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          code_change/3, format_status/2, terminate/2]).
@@ -21,8 +21,8 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-tick() ->
-    gen_server:cast(?MODULE, tick).
+update() ->
+    gen_server:cast(?MODULE, update).
 
 get_as_json() ->
     gen_server:call(?MODULE, get_as_json).
@@ -33,7 +33,7 @@ get_as_json() ->
 
 init([]) ->
     World = zoo_world:new(),
-    {ok, TRef} = timer:apply_interval(?UPDATE_PERIOD, ?MODULE, tick, []),
+    {ok, TRef} = timer:apply_interval(?UPDATE_PERIOD, ?MODULE, update, []),
     State = #state{world = World, tref = TRef},
     {ok, State}.
 
@@ -43,8 +43,8 @@ handle_call(get_as_json, _From, State = #state{world = World}) ->
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
-handle_cast(tick, State = #state{world = World}) ->
-    NewWorld = zoo_world:tick(World),
+handle_cast(update, State = #state{world = World}) ->
+    NewWorld = zoo_world:update(World),
     {noreply, State#state{world = NewWorld}};
 handle_cast(_Request, State) ->
     {noreply, State}.

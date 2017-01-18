@@ -1,9 +1,10 @@
 -module(zoo_world).
--export([new/0, tick/1, as_json/1]).
+-export([new/0, update/1, as_json/1]).
 -export_type([zoo_world/0]).
 
 -define(INITIAL_POPULATION_SIZE, 10).
--define(INITIAL_PLANT_NUMBER, 100).
+-define(INITIAL_PLANT_NUMBER, 1000).
+-define(FEED_DISTANCE, 10).
 
 -record(zoo_world, {
           age :: non_neg_integer(),
@@ -25,14 +26,11 @@ new() ->
        plants = Plants
       }.
 
--spec tick(zoo_world()) -> zoo_world().
-tick(World = #zoo_world{age = Age, creatures = Creatures}) ->
-    NewCreatures = [zoo_creature:tick(Creature)
-                    || Creature <- Creatures],
-    World#zoo_world{
-      age = Age + 1,
-      creatures = NewCreatures
-     }.
+-spec update(zoo_world()) -> zoo_world().
+update(World) ->
+    World1 = update_creatures(World),
+    World2 = feed_creatures(World1),
+    update_age(World2).
 
 -spec as_json(zoo_world()) -> term().
 as_json(#zoo_world{creatures = Creatures, plants = Plants}) ->
@@ -44,3 +42,35 @@ as_json(#zoo_world{creatures = Creatures, plants = Plants}) ->
        [zoo_plant:as_json(Plant) || Plant <- Plants]
       }
      ]}.
+
+-spec update_creatures(#zoo_world{}) -> #zoo_world{}.
+update_creatures(World = #zoo_world{creatures = Creatures}) ->
+    UpdatedCreatures = [zoo_creature:update(Creature) || Creature <- Creatures],
+    World#zoo_world{creatures = UpdatedCreatures}.
+
+-spec update_age(#zoo_world{}) -> #zoo_world{}.
+update_age(World = #zoo_world{age = Age}) ->
+    World#zoo_world{age = Age + 1}.
+
+-spec feed_creatures(#zoo_world{}) -> #zoo_world{}.
+feed_creatures(World = #zoo_world{creatures = Creatures, plants = Plants}) ->
+    {UpdatedCreatures, RemainingPlants}
+    = lists:mapfoldl(fun(Creature, Plants1) ->
+                             feed_creature(Creature, Plants1)
+                     end, Plants, Creatures),
+    World#zoo_world{creatures = UpdatedCreatures, plants = RemainingPlants}.
+
+-spec feed_creature(zoo_creature:zoo_creature(), [zoo_plant:zoo_plant()]) ->
+    {zoo_creature:zoo_creature(), [zoo_plant:zoo_plant()]}.
+feed_creature(Creature, Plants) ->
+    CreaturePosition = zoo_creature:position(Creature),
+    lists:foldl(fun(Plant, {Creature1, RemainingPlants}) ->
+                        PlantPosition = zoo_plant:position(Plant),
+                        Distance = zoo_vector:distance(CreaturePosition, PlantPosition),
+                        case Distance =< ?FEED_DISTANCE of
+                            true ->
+                                {zoo_creature:feed(Creature1), RemainingPlants};
+                            false ->
+                                {Creature1, [Plant | RemainingPlants]}
+                        end
+                end, {Creature, []}, Plants).
