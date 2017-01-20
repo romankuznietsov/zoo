@@ -32,7 +32,8 @@ update(World) ->
     World2 = feed_creatures(World1),
     World3 = clear_dead_creatures(World2),
     World4 = regenerate_plants(World3),
-    update_age(World4).
+    World5 = breed_creatures(World4),
+    update_age(World5).
 
 -spec as_json(zoo_world()) -> term().
 as_json(#zoo_world{creatures = Creatures, plants = Plants}) ->
@@ -90,3 +91,18 @@ clear_dead_creatures(World = #zoo_world{creatures = Creatures}) ->
 -spec regenerate_plants(#zoo_world{}) -> #zoo_world{}.
 regenerate_plants(World = #zoo_world{plants = Plants}) ->
     World#zoo_world{plants = [zoo_plant:new() | Plants]}.
+
+-spec breed_creatures(#zoo_world{}) -> #zoo_world{}.
+breed_creatures(World = #zoo_world{creatures = Creatures}) ->
+    NewCreatures = lists:foldl(
+                     fun(Creature, Acc) ->
+                             case zoo_creature:can_reproduce(Creature) of
+                                 true ->
+                                     {Parent, Child} = zoo_creature:reproduce(Creature),
+                                     [Parent, Child | Acc];
+                                 false ->
+                                     [Creature | Acc]
+                             end
+                     end, [], Creatures),
+    World#zoo_world{creatures = NewCreatures}.
+

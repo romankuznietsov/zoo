@@ -44,7 +44,7 @@ mutate_neuron_weights(Weights) ->
     zoo_lists:modify_random(fun (_) -> generate_weight() end, Weights).
 
 % @doc make a copy of a network with a blank state
--spec clone(#zoo_network{}) -> #zoo_network{}.
+-spec clone(zoo_network()) -> zoo_network().
 clone(Network = #zoo_network{weights = Weights}) ->
     Network#zoo_network{state = blank_state(length(Weights))}.
 

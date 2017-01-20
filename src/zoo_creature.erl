@@ -1,5 +1,6 @@
 -module(zoo_creature).
--export([new/0, update/1, feed/1, position/1, alive/1, as_json/1]).
+-export([new/0, update/1, feed/1, position/1, alive/1, can_reproduce/1,
+         reproduce/1, as_json/1]).
 -export_type([zoo_creature/0]).
 
 -define(STARTING_ENERGY, 1000).
@@ -66,6 +67,22 @@ as_json(#zoo_creature{position = {X, Y}, direction = Direction, energy = Energy}
       {<<"direction">>, Direction},
       {<<"energy">>, Energy}
      ]}.
+
+-spec can_reproduce(zoo_creature()) -> boolean().
+can_reproduce(#zoo_creature{energy = Energy}) ->
+    Energy >= ?STARTING_ENERGY * 2.
+
+-spec reproduce(zoo_creature()) -> {zoo_creature(), zoo_creature()}.
+reproduce(Parent = #zoo_creature{position = Position, energy = Energy, brain = Brain}) ->
+    ChildBrain = zoo_network:mutate(zoo_network:clone(Brain)),
+    Child = #zoo_creature{
+               id = make_ref(),
+               position = Position,
+               direction = zoo_angle:random_direction(),
+               energy = ?STARTING_ENERGY,
+               brain = ChildBrain
+              },
+    {Parent#zoo_creature{energy = Energy - ?STARTING_ENERGY}, Child}.
 
 -spec update_direction(number(), number()) -> number().
 update_direction(Direction, TurnSignal) ->

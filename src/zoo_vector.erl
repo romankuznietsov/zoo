@@ -1,7 +1,7 @@
 -module(zoo_vector).
 -export([random_position/0, distance/2]).
 
--define(MAX_COORD, 100).
+-define(MAX_COORD, 400).
 
 -spec random_position() -> {number(), number()}.
 random_position() ->
