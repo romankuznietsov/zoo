@@ -1,5 +1,5 @@
 -module(zoo_creature).
--export([new/0, update/1, feed/1, position/1, as_json/1]).
+-export([new/0, update/1, feed/1, position/1, alive/1, as_json/1]).
 -export_type([zoo_creature/0]).
 
 -define(STARTING_ENERGY, 1000).
@@ -51,6 +51,10 @@ feed(Creature = #zoo_creature{energy = Energy}) ->
 -spec position(zoo_creature()) -> {number(), number()}.
 position(#zoo_creature{position = Position}) ->
     Position.
+
+-spec alive(zoo_creature()) -> boolean().
+alive(#zoo_creature{energy = Energy}) ->
+    Energy > 0.
 
 -spec as_json(zoo_creature()) -> term().
 as_json(#zoo_creature{position = {X, Y}, direction = Direction, energy = Energy}) ->
