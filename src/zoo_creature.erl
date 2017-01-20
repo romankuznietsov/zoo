@@ -53,9 +53,8 @@ position(#zoo_creature{position = Position}) ->
     Position.
 
 -spec as_json(zoo_creature()) -> term().
-as_json(#zoo_creature{id = Id, position = {X, Y}, direction = Direction, energy = Energy}) ->
+as_json(#zoo_creature{position = {X, Y}, direction = Direction, energy = Energy}) ->
     {[
-      {<<"id">>, list_to_binary(erlang:ref_to_list(Id))},
       {<<"position">>, {[
                          {<<"x">>, X},
                          {<<"y">>, Y}

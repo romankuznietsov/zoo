@@ -3,7 +3,7 @@
 -export_type([zoo_world/0]).
 
 -define(INITIAL_POPULATION_SIZE, 10).
--define(INITIAL_PLANT_NUMBER, 1000).
+-define(INITIAL_PLANT_NUMBER, 300).
 -define(FEED_DISTANCE, 10).
 
 -record(zoo_world, {
