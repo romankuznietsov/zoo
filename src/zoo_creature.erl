@@ -1,6 +1,6 @@
 -module(zoo_creature).
--export([new/0, update/1, feed/1, position/1, alive/1, can_reproduce/1,
-         reproduce/1, as_json/1]).
+-export([new/0, update/2, feed/1, position/1, direction/1, alive/1,
+         can_reproduce/1, reproduce/1, as_json/1]).
 -export_type([zoo_creature/0]).
 
 -define(STARTING_ENERGY, 1000).
@@ -31,10 +31,10 @@ new() ->
        brain = zoo_network:new(?BRAIN_INPUTS, ?BRAIN_OUTPUTS, ?BRAIN_SIZE)
       }.
 
--spec update(zoo_creature()) -> zoo_creature().
+-spec update(zoo_creature(), [number()]) -> zoo_creature().
 update(Creature = #zoo_creature{position = Position, direction = Direction,
-                              brain = Brain, energy = Energy}) ->
-    {NewBrain, [MoveSignal, TurnSignal]} = zoo_network:run([1, 1, 1], Brain),
+                              brain = Brain, energy = Energy}, Signals) ->
+    {NewBrain, [MoveSignal, TurnSignal]} = zoo_network:run(Signals, Brain),
     NewDirection = update_direction(Direction, TurnSignal),
     NewPosition = update_position(Position, NewDirection, MoveSignal),
     NewEnergy = update_energy(Energy),
@@ -52,6 +52,10 @@ feed(Creature = #zoo_creature{energy = Energy}) ->
 -spec position(zoo_creature()) -> {number(), number()}.
 position(#zoo_creature{position = Position}) ->
     Position.
+
+-spec direction(zoo_creature()) -> number().
+direction(#zoo_creature{direction = Direction}) ->
+    Direction.
 
 -spec alive(zoo_creature()) -> boolean().
 alive(#zoo_creature{energy = Energy}) ->
