@@ -1,10 +1,10 @@
 -module(zoo_world).
--export([new/0, update/1, as_json/1]).
+-export([new/0, update/1, age/1, set_age/2, creatures/1, set_creatures/2,
+         plants/1, set_plants/2, as_json/1]).
 -export_type([zoo_world/0]).
 
 -define(INITIAL_POPULATION_SIZE, 10).
 -define(INITIAL_PLANT_NUMBER, 300).
--define(FEED_DISTANCE, 10).
 
 -record(zoo_world, {
           age :: non_neg_integer(),
@@ -26,14 +26,20 @@ new() ->
        plants = Plants
       }.
 
+-define(UPDATES, [
+                  zoo_world_update_creatures,
+                  zoo_world_feed_creatures,
+                  zoo_world_clear_dead_creatures,
+                  zoo_world_regenerate_plants,
+                  zoo_world_breed_creatures,
+                  zoo_world_update_age
+                 ]).
+
 -spec update(zoo_world()) -> zoo_world().
 update(World) ->
-    World1 = update_creatures(World),
-    World2 = feed_creatures(World1),
-    World3 = clear_dead_creatures(World2),
-    World4 = regenerate_plants(World3),
-    World5 = breed_creatures(World4),
-    update_age(World5).
+    lists:foldl(fun(Module, W) ->
+                        Module:run(W)
+                end, World, ?UPDATES).
 
 -spec as_json(zoo_world()) -> term().
 as_json(#zoo_world{creatures = Creatures, plants = Plants}) ->
@@ -46,63 +52,26 @@ as_json(#zoo_world{creatures = Creatures, plants = Plants}) ->
       }
      ]}.
 
--spec update_creatures(#zoo_world{}) -> #zoo_world{}.
-update_creatures(World = #zoo_world{creatures = Creatures}) ->
-    UpdatedCreatures = [zoo_creature:update(Creature) || Creature <- Creatures],
-    World#zoo_world{creatures = UpdatedCreatures}.
+-spec age(zoo_world()) -> non_neg_integer().
+age(#zoo_world{age = Age}) ->
+    Age.
 
--spec update_age(#zoo_world{}) -> #zoo_world{}.
-update_age(World = #zoo_world{age = Age}) ->
-    World#zoo_world{age = Age + 1}.
+-spec set_age(non_neg_integer(), zoo_world()) -> zoo_world().
+set_age(Age, World) ->
+    World#zoo_world{age = Age}.
 
--spec feed_creatures(#zoo_world{}) -> #zoo_world{}.
-feed_creatures(World = #zoo_world{creatures = Creatures, plants = Plants}) ->
-    {UpdatedCreatures, RemainingPlants}
-    = lists:mapfoldl(fun(Creature, Plants1) ->
-                             feed_creature(Creature, Plants1)
-                     end, Plants, Creatures),
-    World#zoo_world{creatures = UpdatedCreatures, plants = RemainingPlants}.
+-spec creatures(zoo_world()) -> [zoo_creature:zoo_creature()].
+creatures(#zoo_world{creatures = Creatures}) ->
+    Creatures.
 
--spec feed_creature(zoo_creature:zoo_creature(), [zoo_plant:zoo_plant()]) ->
-    {zoo_creature:zoo_creature(), [zoo_plant:zoo_plant()]}.
-feed_creature(Creature, Plants) ->
-    CreaturePosition = zoo_creature:position(Creature),
-    lists:foldl(fun(Plant, {Creature1, RemainingPlants}) ->
-                        PlantPosition = zoo_plant:position(Plant),
-                        Distance = zoo_vector:distance(CreaturePosition, PlantPosition),
-                        case Distance =< ?FEED_DISTANCE of
-                            true ->
-                                {zoo_creature:feed(Creature1), RemainingPlants};
-                            false ->
-                                {Creature1, [Plant | RemainingPlants]}
-                        end
-                end, {Creature, []}, Plants).
+-spec set_creatures([zoo_creature:zoo_creature()], zoo_world()) -> zoo_world().
+set_creatures(Creatures, World) ->
+    World#zoo_world{creatures = Creatures}.
 
--spec clear_dead_creatures(#zoo_world{}) -> #zoo_world{}.
-clear_dead_creatures(World = #zoo_world{creatures = Creatures}) ->
-    SurvivedCreatures = lists:foldl(fun(Creature, Survived) ->
-                                            case zoo_creature:alive(Creature) of
-                                                true -> [Creature | Survived];
-                                                false -> Survived
-                                            end
-                                    end, [], Creatures),
-    World#zoo_world{creatures = SurvivedCreatures}.
+-spec plants(zoo_world()) -> [zoo_plant:zoo_plant()].
+plants(#zoo_world{plants = Plants}) ->
+    Plants.
 
--spec regenerate_plants(#zoo_world{}) -> #zoo_world{}.
-regenerate_plants(World = #zoo_world{plants = Plants}) ->
-    World#zoo_world{plants = [zoo_plant:new() | Plants]}.
-
--spec breed_creatures(#zoo_world{}) -> #zoo_world{}.
-breed_creatures(World = #zoo_world{creatures = Creatures}) ->
-    NewCreatures = lists:foldl(
-                     fun(Creature, Acc) ->
-                             case zoo_creature:can_reproduce(Creature) of
-                                 true ->
-                                     {Parent, Child} = zoo_creature:reproduce(Creature),
-                                     [Parent, Child | Acc];
-                                 false ->
-                                     [Creature | Acc]
-                             end
-                     end, [], Creatures),
-    World#zoo_world{creatures = NewCreatures}.
-
+-spec set_plants([zoo_plant:zoo_plant()], zoo_world()) -> zoo_world().
+set_plants(Plants, World) ->
+    World#zoo_world{plants = Plants}.
