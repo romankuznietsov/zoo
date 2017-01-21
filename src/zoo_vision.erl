@@ -20,12 +20,12 @@ view_eye(Position, Direction, Objects) ->
 
 -spec view_object({number(), number()}, number(), {number(), number()}) -> number().
 view_object(Position = {X, Y}, Direction, ObjectPosition = {ObjX, ObjY}) ->
-    DirectionToObject = math:atan2(ObjY - Y, ObjX - X),
-    EyeAngle = abs(zoo_angle:normalize(DirectionToObject - Direction)),
-    case EyeAngle =< ?FIELD_OF_VIEW of
+    Distance = zoo_vector:distance(Position, ObjectPosition),
+    case Distance < ?MAX_DISTANCE of
         true ->
-            Distance = zoo_vector:distance(Position, ObjectPosition),
-            case Distance < ?MAX_DISTANCE of
+            DirectionToObject = math:atan2(ObjY - Y, ObjX - X),
+            EyeAngle = abs(zoo_angle:normalize(DirectionToObject - Direction)),
+            case EyeAngle =< ?FIELD_OF_VIEW of
                 true -> 1 - (Distance / ?MAX_DISTANCE);
                 false -> 0
             end;

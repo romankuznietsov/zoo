@@ -12,7 +12,7 @@
   };
 
   function drawPlant(plant) {
-    ctx.fillStyle = "rgb(0, 255, 0)";
+    ctx.fillStyle = "rgb(0,255,0)";
     ctx.beginPath();
     ctx.arc(plant.position.x, plant.position.y, 2, 0, 2 * Math.PI);
     ctx.fill();
@@ -27,6 +27,26 @@
     ctx.arc(0, 0, 10, 0, 2 * Math.PI);
     ctx.lineTo(0, 0);
     ctx.stroke();
+
+    // ctx.strokeStyle = "rgb(255,230,230)";
+    // ctx.beginPath();
+    // ctx.moveTo(0, 0);
+    // ctx.lineTo(100, 0);
+    // ctx.stroke();
+
+    // ctx.rotate(Math.PI / 180 * 40);
+    // ctx.beginPath();
+    // ctx.moveTo(0, 0);
+    // ctx.lineTo(100, 0);
+    // ctx.stroke();
+
+    // ctx.rotate(- Math.PI / 180 * 80);
+    // ctx.beginPath();
+    // ctx.moveTo(0, 0);
+    // ctx.lineTo(100, 0);
+    // ctx.stroke();
+
+    // ctx.rotate(Math.PI / 180 * 40);
 
     ctx.rotate(- creature.direction);
     ctx.translate(- creature.position.x, - creature.position.y);

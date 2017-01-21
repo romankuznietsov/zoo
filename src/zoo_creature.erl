@@ -9,7 +9,7 @@
 -define(BRAIN_SIZE, 7).
 -define(TURN_SPEED, 0.1).
 -define(MOVE_SPEED, 1).
--define(FOOD_ENERGY, 100).
+-define(FOOD_ENERGY, 10).
 
 -record(zoo_creature, {
           id :: reference(),

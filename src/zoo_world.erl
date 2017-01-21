@@ -4,7 +4,7 @@
 -export_type([zoo_world/0]).
 
 -define(INITIAL_POPULATION_SIZE, 10).
--define(INITIAL_PLANT_NUMBER, 300).
+-define(INITIAL_PLANT_NUMBER, 1000).
 
 -record(zoo_world, {
           age :: non_neg_integer(),
