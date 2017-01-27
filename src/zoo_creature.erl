@@ -4,12 +4,12 @@
 -export_type([zoo_creature/0]).
 
 -define(STARTING_ENERGY, 1000).
--define(BRAIN_INPUTS, 3).
+-define(BRAIN_INPUTS, 6).
 -define(BRAIN_OUTPUTS, 2).
--define(BRAIN_SIZE, 7).
+-define(BRAIN_SIZE, 10).
 -define(TURN_SPEED, 0.1).
 -define(MOVE_SPEED, 1).
--define(FOOD_ENERGY, 10).
+-define(FOOD_ENERGY, 100).
 
 -record(zoo_creature, {
           id :: reference(),
@@ -95,8 +95,8 @@ update_direction(Direction, TurnSignal) ->
 
 -spec update_position({number(), number()}, number(), number()) -> {number(), number()}.
 update_position({X, Y}, Direction, MoveSignal) ->
-    Dx = math:cos(Direction) * (MoveSignal + 1) * ?MOVE_SPEED,
-    Dy = math:sin(Direction) * (MoveSignal + 1) * ?MOVE_SPEED,
+    Dx = math:cos(Direction) * MoveSignal * ?MOVE_SPEED,
+    Dy = math:sin(Direction) * MoveSignal * ?MOVE_SPEED,
     {X + Dx, Y + Dy}.
 
 -spec update_energy(number()) -> number().

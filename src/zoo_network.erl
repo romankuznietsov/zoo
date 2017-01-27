@@ -35,8 +35,10 @@ run(InputValues, Network = #zoo_network{inputs = Inputs, outputs = Outputs,
 % @doc mutate a random weight in a network
 -spec mutate(zoo_network()) -> zoo_network().
 mutate(Network = #zoo_network{weights = Weights}) ->
-    MutatedWeights = zoo_lists:modify_random(fun mutate_neuron_weights/1, Weights),
-    Network#zoo_network{weights = MutatedWeights}.
+    Mutated1 = zoo_lists:modify_random(fun mutate_neuron_weights/1, Weights),
+    Mutated2 = zoo_lists:modify_random(fun mutate_neuron_weights/1, Mutated1),
+    Mutated3 = zoo_lists:modify_random(fun mutate_neuron_weights/1, Mutated2),
+    Network#zoo_network{weights = Mutated3}.
 
 % @doc mutate a random weight in a single row
 -spec mutate_neuron_weights([number()]) -> [number()].
