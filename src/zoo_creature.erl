@@ -4,15 +4,15 @@
 -export_type([zoo_creature/0]).
 
 -define(STARTING_ENERGY, 1000).
--define(BRAIN_INPUTS, 6).
+-define(BRAIN_INPUTS, 10).
 -define(BRAIN_OUTPUTS, 2).
--define(BRAIN_SIZE, 10).
+-define(BRAIN_SIZE, 15).
 -define(TURN_SPEED, 0.1).
 -define(MOVE_SPEED, 1).
 -define(FOOD_ENERGY, 100).
+-define(MUTATIONS, 30).
 
 -record(zoo_creature, {
-          id :: reference(),
           position :: {number(), number()},
           direction :: number(),
           energy :: number(),
@@ -24,7 +24,6 @@
 -spec new() -> zoo_creature().
 new() ->
     #zoo_creature{
-       id = make_ref(),
        position = zoo_vector:random_position(),
        direction = zoo_angle:random_direction(),
        energy = ?STARTING_ENERGY,
@@ -78,9 +77,9 @@ can_reproduce(#zoo_creature{energy = Energy}) ->
 
 -spec reproduce(zoo_creature()) -> {zoo_creature(), zoo_creature()}.
 reproduce(Parent = #zoo_creature{position = Position, energy = Energy, brain = Brain}) ->
-    ChildBrain = zoo_network:mutate(zoo_network:clone(Brain)),
+    Mutations = rand:uniform(?MUTATIONS),
+    ChildBrain = zoo_network:mutate(zoo_network:clone(Brain), Mutations),
     Child = #zoo_creature{
-               id = make_ref(),
                position = Position,
                direction = zoo_angle:random_direction(),
                energy = ?STARTING_ENERGY,
@@ -95,8 +94,8 @@ update_direction(Direction, TurnSignal) ->
 
 -spec update_position({number(), number()}, number(), number()) -> {number(), number()}.
 update_position({X, Y}, Direction, MoveSignal) ->
-    Dx = math:cos(Direction) * MoveSignal * ?MOVE_SPEED,
-    Dy = math:sin(Direction) * MoveSignal * ?MOVE_SPEED,
+    Dx = math:cos(Direction) * (MoveSignal + 1) * ?MOVE_SPEED,
+    Dy = math:sin(Direction) * (MoveSignal + 1) * ?MOVE_SPEED,
     {X + Dx, Y + Dy}.
 
 -spec update_energy(number()) -> number().

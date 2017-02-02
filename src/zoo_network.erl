@@ -1,6 +1,6 @@
 -module(zoo_network).
 
--export([new/3, run/2, mutate/1, clone/1]).
+-export([new/3, run/2, mutate/2, clone/1]).
 -export_type([zoo_network/0]).
 
 -record(zoo_network, {
@@ -33,12 +33,12 @@ run(InputValues, Network = #zoo_network{inputs = Inputs, outputs = Outputs,
     {Network#zoo_network{state = UpdatedState}, OutputValues}.
 
 % @doc mutate a random weight in a network
--spec mutate(zoo_network()) -> zoo_network().
-mutate(Network = #zoo_network{weights = Weights}) ->
-    Mutated1 = zoo_lists:modify_random(fun mutate_neuron_weights/1, Weights),
-    Mutated2 = zoo_lists:modify_random(fun mutate_neuron_weights/1, Mutated1),
-    Mutated3 = zoo_lists:modify_random(fun mutate_neuron_weights/1, Mutated2),
-    Network#zoo_network{weights = Mutated3}.
+-spec mutate(zoo_network(), number()) -> zoo_network().
+mutate(Network = #zoo_network{weights = Weights}, Mutations) ->
+    MutatedWeights = lists:foldl(fun(_, W) ->
+                                         zoo_lists:modify_random(fun mutate_neuron_weights/1, W)
+                                 end, Weights, lists:seq(1, Mutations)),
+    Network#zoo_network{weights = MutatedWeights}.
 
 % @doc mutate a random weight in a single row
 -spec mutate_neuron_weights([number()]) -> [number()].

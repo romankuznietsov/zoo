@@ -3,7 +3,6 @@
 -export_type([zoo_plant/0]).
 
 -record(zoo_plant, {
-          id :: reference(),
           position :: {number(), number()}
          }).
 
@@ -12,7 +11,6 @@
 -spec new() -> zoo_plant().
 new() ->
     #zoo_plant{
-       id = make_ref(),
        position = zoo_vector:random_position()
       }.
 

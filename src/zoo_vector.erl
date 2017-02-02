@@ -1,5 +1,5 @@
 -module(zoo_vector).
--export([random_position/0, distance/2]).
+-export([random_position/0, distance/2, direction/2]).
 
 -define(MAX_COORD, 400).
 
@@ -16,3 +16,7 @@ distance({X1, Y1}, {X2, Y2}) ->
     Dx = X1 - X2,
     Dy = Y1 - Y2,
     math:sqrt(Dx * Dx + Dy * Dy).
+
+-spec direction({number(), number()}, {number(), number()}) -> number().
+direction({FromX, FromY}, {ToX, ToY}) ->
+    math:atan2(ToY - FromY, ToX - FromX).

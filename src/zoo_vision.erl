@@ -2,36 +2,57 @@
 
 -export([view/3]).
 
--define(FIELD_OF_VIEW, 0.3490658503988659). % PI / 9 = 20 deg
--define(EYE_DIRECTIONS, [-0.6981317007977318, 0, 0.6981317007977318]).
+-define(FIELD_OF_VIEW, 0.20943951023931953). % 12 deg
+-define(EYE_DIRECTIONS, [
+                         0.8377580409572781, % 48 deg
+                         0.41887902047863906, % 24 deg
+                         0,
+                         -0.41887902047863906,
+                         -0.8377580409572781
+                        ]).
 -define(MAX_DISTANCE, 100).
 
 -spec view({number(), number()}, number(), [{number(), number()}]) -> [number()].
 view(Position, Direction, Objects) ->
-    Signals = [view_object(Position, Direction, Object) || Object <- Objects],
-    AggregatedSignals = lists:foldl(fun([S1, S2, S3], [A1, A2, A3]) ->
-                                            [A1 + S1, A2 + S2, A3 + S3]
-                                    end, [0, 0, 0], Signals),
-    [S * 2 - 1 || S <- AggregatedSignals].
+    AbsoluteEyeDirections = absolute_eye_directions(Direction),
+    Signals = [view_object(Position, Object, AbsoluteEyeDirections) || Object <- Objects],
+    combine_signals(Signals).
 
 
--spec view_object({number(), number()}, number(), {number(), number()}) -> [number()].
-view_object(Position, _, Position) -> [0, 0, 0];
-view_object(Position, Direction, Object) ->
+-spec view_object({number(), number()}, {number(), number()}, [number()]) -> [number()].
+view_object(Position, Position, _) ->
+    blank_signal();
+view_object(Position, Object, EyeDirections) ->
     Distance = zoo_vector:distance(Position, Object),
+    Direction = zoo_vector:direction(Position, Object),
     case Distance < ?MAX_DISTANCE of
         true ->
-            [view_eye(Position, Direction, Object, EyeDirection, Distance)
-             || EyeDirection <- ?EYE_DIRECTIONS];
-        false -> [0, 0, 0]
+            [view_eye(Distance, Direction, EyeDirection)
+             || EyeDirection <- EyeDirections];
+        false -> blank_signal()
     end.
 
--spec view_eye({number(), number()}, number(), {number(), number()}, number(), number()) -> number().
-view_eye({X, Y}, Direction, {ObjX, ObjY}, EyeDirection, Distance) ->
-    AbsoluteEyeDirection = zoo_angle:normalize(Direction + EyeDirection),
-    DirectionToObject = math:atan2(ObjY - Y, ObjX - X),
-    EyeAngle = abs(zoo_angle:normalize(DirectionToObject - AbsoluteEyeDirection)),
-    case EyeAngle =< ?FIELD_OF_VIEW of
+-spec view_eye(number(), number(), number()) -> number().
+view_eye(Distance, Direction, EyeDirection) ->
+    AngleFromEyeCenter = abs(zoo_angle:normalize(Direction - EyeDirection)),
+    case AngleFromEyeCenter =< ?FIELD_OF_VIEW of
         true -> 1 - (Distance / ?MAX_DISTANCE);
         false -> 0
     end.
+
+-spec combine_signals([[number()]]) -> [number()].
+combine_signals(Signals) ->
+    SummedSignals = lists:foldl(fun sum_signals/2, blank_signal(), Signals),
+    [S * 2 - 1 || S <- SummedSignals].
+
+-spec sum_signals([number()], [number()]) -> [number()].
+sum_signals(Signals, Acc) ->
+    [S + A || {S, A} <- lists:zip(Signals, Acc)].
+
+-spec absolute_eye_directions(number()) -> [number()].
+absolute_eye_directions(Direction) ->
+    [zoo_angle:normalize(Direction + EyeDir) || EyeDir <- ?EYE_DIRECTIONS].
+
+-spec blank_signal() -> [number()].
+blank_signal() ->
+    [0 || _ <- ?EYE_DIRECTIONS].
