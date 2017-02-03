@@ -4,13 +4,12 @@
 -export_type([zoo_creature/0]).
 
 -define(STARTING_ENERGY, 1000).
--define(BRAIN_INPUTS, 10).
+-define(BRAIN_SIZE, 10).
 -define(BRAIN_OUTPUTS, 2).
--define(BRAIN_SIZE, 15).
 -define(TURN_SPEED, 0.1).
 -define(MOVE_SPEED, 1).
 -define(FOOD_ENERGY, 100).
--define(MUTATIONS, 30).
+-define(MUTATIONS, 10).
 
 -record(zoo_creature, {
           position :: {number(), number()},
@@ -27,13 +26,13 @@ new() ->
        position = zoo_vector:random_position(),
        direction = zoo_angle:random_direction(),
        energy = ?STARTING_ENERGY,
-       brain = zoo_network:new(?BRAIN_INPUTS, ?BRAIN_OUTPUTS, ?BRAIN_SIZE)
+       brain = zoo_network:new(?BRAIN_SIZE)
       }.
 
 -spec update(zoo_creature(), [number()]) -> zoo_creature().
 update(Creature = #zoo_creature{position = Position, direction = Direction,
                               brain = Brain, energy = Energy}, Signals) ->
-    {NewBrain, [MoveSignal, TurnSignal]} = zoo_network:run(Signals, Brain),
+    {NewBrain, [MoveSignal, TurnSignal]} = zoo_network:run(Signals, ?BRAIN_OUTPUTS, Brain),
     NewDirection = update_direction(Direction, TurnSignal),
     NewPosition = update_position(Position, NewDirection, MoveSignal),
     NewEnergy = update_energy(Energy),

@@ -1,11 +1,9 @@
 -module(zoo_network).
 
--export([new/3, run/2, mutate/2, clone/1]).
+-export([new/1, run/3, mutate/2, clone/1]).
 -export_type([zoo_network/0]).
 
 -record(zoo_network, {
-          inputs :: pos_integer(),
-          outputs :: pos_integer(),
           weights :: [[number()]],
           state :: [number()]
          }).
@@ -13,24 +11,20 @@
 -opaque zoo_network() :: #zoo_network{}.
 
 % @doc returns a new network with random weights
--spec new(pos_integer(), pos_integer(), pos_integer()) -> zoo_network().
-new(Inputs, Outputs, Dimension) ->
+-spec new(pos_integer()) -> zoo_network().
+new(Dimension) ->
     #zoo_network{
-       inputs = Inputs,
-       outputs = Outputs,
        weights = generate_weights(Dimension),
        state = blank_state(Dimension)
       }.
 
 % @doc runs the network with specified input and returns the
 % network with updated state and the outputs
--spec run([number()], zoo_network()) -> {zoo_network(), [number()]}.
-run(InputValues, Network = #zoo_network{inputs = Inputs, outputs = Outputs,
-                                        weights = Weights, state = State}) ->
-    StateWithInputs = set_input_values(InputValues, Inputs, State),
-    UpdatedState = update_state(Weights, StateWithInputs),
-    OutputValues = lists:sublist(UpdatedState, Inputs + 1, Outputs),
-    {Network#zoo_network{state = UpdatedState}, OutputValues}.
+-spec run([number()], pos_integer(), zoo_network()) -> {zoo_network(), [number()]}.
+run(Inputs, OutputNum, Network = #zoo_network{weights = Weights, state = State}) ->
+    UpdatedState = update_state(Weights, State, Inputs),
+    Output = lists:nthtail(length(UpdatedState) - OutputNum, UpdatedState),
+    {Network#zoo_network{state = UpdatedState}, Output}.
 
 % @doc mutate a random weight in a network
 -spec mutate(zoo_network(), number()) -> zoo_network().
@@ -52,22 +46,29 @@ clone(Network = #zoo_network{weights = Weights}) ->
 
 % PRIVATE
 
-% @doc returns the state with input elements replaced with input values
--spec set_input_values([number()], pos_integer(), [number()]) -> [number()].
-set_input_values(InputValues, Inputs, State) ->
-    % Inputs = lists:length(InputValues),
-    InputValues ++ lists:nthtail(Inputs, State).
-
 % @doc returns updated state from network's weights and previous state
--spec update_state([[number()]], [number()]) -> [number()].
-update_state(Weights, State) ->
+-spec update_state([[number()]], [number()], [number()]) -> [number()].
+update_state(Weights, State, Inputs) ->
     Signals = [neuron_signals(NeuronWeights, State) || NeuronWeights <- Weights],
-    [afn(lists:sum(NeuronSignals)) || NeuronSignals <- Signals].
+    SignalsWithInputs = add_inputs(Signals, Inputs),
+    [afn(lists:sum(NeuronSignals)) || NeuronSignals <- SignalsWithInputs].
 
 % @doc returns neuron's input signals from its inputs' weights and state
 -spec neuron_signals([number()], [number()]) -> [number()].
 neuron_signals(NeuronWeights, State) ->
     [W * S || {W, S} <- lists:zip(NeuronWeights, State)].
+
+-spec add_inputs([[number()]], [number()]) -> [[number()]].
+add_inputs(Signals, Inputs) ->
+    add_inputs(Signals, Inputs, []).
+
+-spec add_inputs([[number()]], [number()], [[number()]]) -> [[number()]].
+add_inputs([], [], Result) ->
+    lists:reverse(Result);
+add_inputs([NeuronSignals | Signals], [], Result) ->
+    add_inputs(Signals, [], [NeuronSignals | Result]);
+add_inputs([NeuronSignals | Signals], [Input | Inputs], Result) ->
+    add_inputs(Signals, Inputs, [[Input | NeuronSignals] | Result]).
 
 % @doc neuron activation function
 -spec afn(number()) -> number().
